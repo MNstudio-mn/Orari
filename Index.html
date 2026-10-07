@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Orari">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0A1220">
+<title>Orari e trasferte</title>
+<style>
+:root{
+  color-scheme:dark;
+  --notte:#0A1220;
+  --superficie:#111C2F;
+  --rilievo:#182640;
+  --oro:#C8A96B;
+  --avorio:#F2EEE4;
+  --tenue:#8F99AD;
+  --linea:rgba(200,169,107,.22);
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{
+  min-height:100vh;
+  background:radial-gradient(130% 55% at 50% 0%,#15233D 0%,var(--notte) 65%),var(--notte);
+  color:var(--avorio);
+  font:16px/1.4 var(--sans);
+}
+#app{
+  max-width:480px;margin:0 auto;
+  padding:max(18px,env(safe-area-inset-top)) 20px calc(100px + env(safe-area-inset-bottom));
+}
+h1{font:500 32px/1.15 var(--serif);letter-spacing:-.01em;margin:10px 0 18px}
+h2{font:500 20px/1.25 var(--serif);margin:26px 0 10px}
+button,input,textarea{font:inherit;color:inherit}
+button:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible{
+  outline:2px solid var(--oro);outline-offset:2px;
+}
+
+/* —– Quadrante —– */
+.timbra{display:flex;flex-direction:column;align-items:center}
+.stato{color:var(–tenue)}
+.stato.attivo{color:var(–oro)}
+.quadrante{
+position:relative;
+width:min(78vw,296px);aspect-ratio:1;margin:20px 0 10px;
+border-radius:50%;border:1px solid var(–linea);padding:0;
+background:radial-gradient(circle at 50% 32%,#1B2B46 0%,#0C1526 72%);
+display:grid;place-items:center;
+transition:transform .12s;
+}
+.quadrante:active{transform:scale(.985)}
+.quadrante svg{position:absolute;inset:0;width:100%;height:100%}
+.tk{stroke:rgba(242,238,228,.26);stroke-width:1.2;stroke-linecap:round}
+.tk.mj{stroke:rgba(242,238,228,.5);stroke-width:2}
+.tk.on{stroke:var(–oro)}
+.centro{position:relative;display:grid;gap:8px;justify-items:center}
+.cont{font:300 44px/1 var(–sans);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.azione{font:italic 400 21px/1 var(–serif);color:var(–oro)}
+label.corr{display:block;margin-top:26px;color:var(–tenue)}
+label.corr input{width:auto;display:inline-block;margin-left:8px}
+.totoggi{margin-top:22px;color:var(–tenue)}
+.totoggi strong{color:var(–avorio);font:500 20px var(–serif);margin-left:6px}
+.timbra details.nuovo{width:100%;margin-top:26px}
+.tenue{color:var(–tenue)}
+.leg{margin:10px 0 0;text-align:center;color:var(–tenue);font-size:13px}
+
+/* —– Selettore mese e anno —– */
+.mese{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.mese button{background:none;border:0;color:var(–oro);font-size:28px;line-height:1;padding:6px 18px;min-height:44px}
+.mese button.titolo-mese{font:500 21px var(–serif);color:var(–avorio);padding:6px 10px}
+.titolo-mese .freccia{font-size:12px;color:var(–oro);margin-left:4px}
+.picker{background:var(–superficie);border:1px solid var(–linea);border-radius:14px;padding:12px;margin-bottom:14px}
+.anno{display:flex;align-items:center;justify-content:space-between}
+.anno strong{font:500 22px var(–serif)}
+.anno button{background:none;border:0;color:var(–oro);font-size:26px;padding:4px 16px;min-height:44px}
+.mesi{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
+.mesi button{min-height:44px;border:1px solid var(–linea);border-radius:10px;background:transparent;color:var(–avorio)}
+.mesi button.on{background:var(–oro);border-color:var(–oro);color:var(–notte);font-weight:600}
+.sotto{margin:0 0 14px;text-align:center;color:var(–tenue);font-size:14px}
+
+/* —– Calendario —– */
+.sett,.griglia{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.sett{margin-bottom:6px;text-align:center;color:var(–tenue);font-size:13px}
+.gg{
+position:relative;aspect-ratio:1/1.1;
+border:1px solid transparent;border-radius:10px;
+background:var(–superficie);color:var(–avorio);
+padding:5px 6px;text-align:left;
+display:flex;flex-direction:column;justify-content:space-between;
+}
+.gg .n{font-size:15px}
+.gg .h{font-size:11px;color:var(–tenue);min-height:13px}
+.gg .mk{position:absolute;top:6px;right:6px;font-size:8px;color:var(–oro);letter-spacing:2px}
+.gg.fest{background:transparent;color:var(–tenue)}
+.gg.adesso{border-color:var(–oro)}
+.gg.sel{background:var(–oro);color:var(–notte)}
+.gg.sel .h,.gg.sel .mk{color:var(–notte)}
+.dettaglio h2{margin-top:24px}
+
+/* —– Liste —– */
+.lista{border-top:1px solid var(–linea)}
+.riga{
+display:flex;align-items:center;justify-content:space-between;gap:10px;
+padding:13px 2px;border-bottom:1px solid var(–linea);
+}
+button.riga{width:100%;background:none;border:0;border-bottom:1px solid var(–linea);color:inherit;text-align:left}
+.riga small{display:block;color:var(–tenue)}
+.riga .dx{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.riga .x{background:none;border:0;color:var(–tenue);font-size:18px;padding:8px 10px;min-height:44px}
+.riga .oro{color:var(–oro)}
+.riga.tot{font-weight:600}
+.val{font:500 22px var(–serif)}
+.vuoto{color:var(–tenue);text-align:center;padding:26px 16px;border-bottom:1px solid var(–linea)}
+
+/* —– Moduli —– */
+details.nuovo{margin-top:14px}
+details.nuovo summary{
+list-style:none;cursor:pointer;color:var(–oro);
+border:1px solid var(–linea);border-radius:10px;
+padding:12px 16px;text-align:center;font-weight:600;min-height:44px;
+}
+details.nuovo summary::-webkit-details-marker{display:none}
+.form{display:grid;gap:12px;margin-top:12px}
+label{display:grid;gap:4px;color:var(–tenue);font-size:14px}
+input,textarea{
+width:100%;min-height:44px;padding:10px 12px;
+border:1px solid var(–linea);border-radius:10px;background:var(–superficie);
+color:var(–avorio);font-size:16px;
+}
+.btn{
+border:0;border-radius:10px;background:var(–oro);color:var(–notte);
+font-weight:600;padding:12px 16px;min-height:44px;
+}
+.btn.sec{background:transparent;color:var(–avorio);border:1px solid var(–linea)}
+.nota{margin:0;color:var(–tenue);font-size:14px}
+
+/* —– Barra in basso —– */
+nav{
+position:fixed;left:0;right:0;bottom:0;display:flex;
+background:rgba(10,18,32,.94);border-top:1px solid var(–linea);
+padding-bottom:env(safe-area-inset-bottom);
+-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+}
+nav button{
+flex:1;background:none;border:0;border-top:2px solid transparent;
+color:var(–tenue);font-size:13px;padding:13px 2px;min-height:52px;
+}
+nav button.on{color:var(–oro);font-weight:600;border-top-color:var(–oro)}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+</head>
+<body>
+<main id="app"></main>
+<nav>
+  <button data-t="timbra" onclick="vai('timbra')">Timbra</button>
+  <button data-t="calendario" onclick="vai('calendario')">Calendario</button>
+  <button data-t="orari" onclick="vai('orari')">Orari</button>
+  <button data-t="trasferte" onclick="vai('trasferte')">Trasferte</button>
+  <button data-t="riepilogo" onclick="vai('riepilogo')">Riepilogo</button>
+</nav>
+
+<script>
+/* ---------- Utilità ---------- */
+const MESI=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+const GIORNI=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
+const GIORNI_LUNGHI=['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato'];
+const due=n=>String(n).padStart(2,'0');
+const fmtData=d=>`${due(d.getDate())}/${due(d.getMonth()+1)}/${d.getFullYear()}`;
+const fmtOra=d=>`${due(d.getHours())}:${due(d.getMinutes())}`;
+const fmtDurMs=ms=>{const m=Math.max(0,Math.floor(ms/60000));return `${Math.floor(m/60)}h ${due(m%60)}m`;};
+const fmtBreve=ms=>{const m=Math.max(0,Math.round(ms/60000));const h=Math.floor(m/60),r=m%60;return r?`${h}h${due(r)}`:`${h}h`;};
+const fmtMin=m=>m<60?`${m} min`:`${Math.floor(m/60)}h ${due(m%60)}m`;
+const fmtCont=ms=>{const s=Math.max(0,Math.floor(ms/1000));return `${due(Math.floor(s/3600))}:${due(Math.floor(s%3600/60))}:${due(s%60)}`;};
+const inputData=d=>`${d.getFullYear()}-${due(d.getMonth()+1)}-${due(d.getDate())}`;
+const nuovoId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const g=i=>document.getElementById(i);
+const stessoGiorno=(a,b)=>a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();
+
+/* ---------- Dati (salvati sul telefono) ---------- */
+const KEY='orari_trasferte_v1';
+let db={turni:[],trasferte:[],permessi:[],attivo:null};
+let tab='timbra';
+let picker=false;
+let giorno=new Date();
+let mese={y:giorno.getFullYear(),m:giorno.getMonth()};
+
+async function carica(){
+  let raw=null;
+  try{ if(window.storage){ const r=await window.storage.get(KEY); raw=r&&r.value; } }catch(e){}
+  if(!raw){ try{ raw=localStorage.getItem(KEY); }catch(e){} }
+  if(raw){
+    try{
+      const d=JSON.parse(raw);
+      db={turni:d.turni||[],trasferte:d.trasferte||[],permessi:d.permessi||[],attivo:d.attivo||null};
+    }catch(e){}
+  }
+}
+function salva(){
+  const raw=JSON.stringify(db);
+  try{ if(window.storage) Promise.resolve(window.storage.set(KEY,raw)).catch(()=>{}); }catch(e){}
+  try{ localStorage.setItem(KEY,raw); }catch(e){}
+}
+
+const inMese=d=>d.getFullYear()===mese.y&&d.getMonth()===mese.m;
+const durata=x=>new Date(x.fine)-new Date(x.inizio);
+const turniMese=()=>db.turni.filter(x=>inMese(new Date(x.inizio))).sort((a,b)=>new Date(b.inizio)-new Date(a.inizio));
+const trasferteMese=()=>db.trasferte.filter(x=>inMese(new Date(x.data))).sort((a,b)=>new Date(b.data)-new Date(a.data));
+const permessiMese=()=>db.permessi.filter(x=>inMese(new Date(x.data)));
+
+function msOggi(){
+  const ora=new Date();
+  let t=db.turni.filter(x=>stessoGiorno(new Date(x.inizio),ora)).reduce((s,x)=>s+durata(x),0);
+  if(db.attivo) t+=Date.now()-new Date(db.attivo.inizio);
+  return t;
+}
+
+/* ---------- Azioni ---------- */
+function inizia(){
+  if(db.attivo) return;
+  db.attivo={inizio:new Date().toISOString()};
+  salva();render();
+}
+function termina(){
+  if(!db.attivo) return;
+  db.turni.push({id:nuovoId(),inizio:db.attivo.inizio,fine:new Date().toISOString()});
+  db.attivo=null;
+  salva();render();
+}
+function cambiaInizio(v){
+  if(!v||!db.attivo) return;
+  const [h,m]=v.split(':').map(Number);
+  const d=new Date();
+  d.setHours(h,m,0,0);
+  if(d>new Date()) d.setDate(d.getDate()-1);
+  db.attivo.inizio=d.toISOString();
+  salva();render();
+}
+function creaTurno(giornoStr,a,b){
+  const ini=new Date(`${giornoStr}T${a}`);
+  const fin=new Date(`${giornoStr}T${b}`);
+  if(fin<ini) fin.setDate(fin.getDate()+1);
+  db.turni.push({id:nuovoId(),inizio:ini.toISOString(),fine:fin.toISOString()});
+  return ini;
+}
+function aggiungiTurno(){
+  const d=g('f_data').value,a=g('f_ini').value,b=g('f_fin').value;
+  if(!d||!a||!b){alert('Compila giorno, inizio e fine');return;}
+  const ini=creaTurno(d,a,b);
+  giorno=ini;mese={y:ini.getFullYear(),m:ini.getMonth()};
+  salva();render();
+}
+function aggiungiTurnoGiorno(){
+  const a=g('c_ini').value,b=g('c_fin').value;
+  if(!a||!b){alert('Inserisci inizio e fine');return;}
+  creaTurno(inputData(giorno),a,b);
+  salva();render();
+}
+function creaTrasferta(giornoStr,luogo){
+  const dt=new Date(`${giornoStr}T12:00`);
+  db.trasferte.push({id:nuovoId(),data:dt.toISOString(),luogo});
+  return dt;
+}
+function aggiungiTrasferta(){
+  const d=g('t_data').value,l=g('t_luogo').value.trim();
+  if(!d||!l){alert('Inserisci giorno e luogo');return;}
+  const dt=creaTrasferta(d,l);
+  giorno=dt;mese={y:dt.getFullYear(),m:dt.getMonth()};
+  salva();render();
+}
+function aggiungiTrasfertaGiorno(){
+  const l=g('c_luogo').value.trim();
+  if(!l){alert('Inserisci il luogo');return;}
+  creaTrasferta(inputData(giorno),l);
+  salva();render();
+}
+function creaPermesso(giornoStr,min,nota){
+  db.permessi.push({id:nuovoId(),data:new Date(`${giornoStr}T12:00`).toISOString(),minuti:min,nota});
+}
+function aggiungiPermessoOggi(){
+  const min=parseInt(g('p_min').value,10);
+  if(!(min>0)){alert('Inserisci i minuti');return;}
+  creaPermesso(inputData(new Date()),min,g('p_nota').value.trim());
+  salva();render();
+  alert(`Permesso di ${fmtMin(min)} segnato`);
+}
+function aggiungiPermessoGiorno(){
+  const min=parseInt(g('c_pmin').value,10);
+  if(!(min>0)){alert('Inserisci i minuti');return;}
+  creaPermesso(inputData(giorno),min,g('c_pnota').value.trim());
+  salva();render();
+}
+function elimina(tipo,i){
+  if(!confirm('Eliminare questa voce?')) return;
+  db[tipo]=db[tipo].filter(x=>x.id!==i);
+  salva();render();
+}
+
+function allineaGiorno(){
+  if(giorno.getFullYear()!==mese.y||giorno.getMonth()!==mese.m){
+    const oggi=new Date();
+    giorno=(oggi.getFullYear()===mese.y&&oggi.getMonth()===mese.m)?oggi:new Date(mese.y,mese.m,1);
+  }
+}
+function cambiaMese(n){
+  const d=new Date(mese.y,mese.m+n,1);
+  mese={y:d.getFullYear(),m:d.getMonth()};
+  allineaGiorno();render();
+}
+function cambiaAnno(n){mese={y:mese.y+n,m:mese.m};allineaGiorno();render();}
+function scegliMese(i){mese={y:mese.y,m:i};picker=false;allineaGiorno();render();}
+function scegliGiorno(d){giorno=new Date(mese.y,mese.m,d);render();}
+function togglePicker(){picker=!picker;render();}
+function vai(t){tab=t;picker=false;render();window.scrollTo(0,0);}
+
+function copiaBackup(){
+  const t=g('bk');
+  t.select();t.setSelectionRange(0,t.value.length);
+  const ok=()=>alert('Backup copiato');
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t.value).then(ok,()=>{document.execCommand('copy');ok();});
+  }else{
+    document.execCommand('copy');ok();
+  }
+}
+function ripristina(){
+  try{
+    const d=JSON.parse(g('bk').value);
+    if(!Array.isArray(d.turni)||!Array.isArray(d.trasferte)) throw new Error('formato');
+    if(!confirm('Sostituire i dati attuali con questo backup?')) return;
+    db={turni:d.turni,trasferte:d.trasferte,permessi:Array.isArray(d.permessi)?d.permessi:[],attivo:d.attivo||null};
+    salva();render();
+  }catch(e){
+    alert('Backup non valido');
+  }
+}
+
+/* ---------- Componenti ---------- */
+function selMese(){
+  const apri=picker?`<div class="picker">
+    <div class="anno">
+      <button aria-label="Anno precedente" onclick="cambiaAnno(-1)">‹</button>
+      <strong>${mese.y}</strong>
+      <button aria-label="Anno successivo" onclick="cambiaAnno(1)">›</button>
+    </div>
+    <div class="mesi">${MESI.map((n,i)=>`<button class="${i===mese.m?'on':''}" onclick="scegliMese(${i})">${n.slice(0,3)}</button>`).join('')}</div>
+  </div>`:'';
+  return `<div class="mese">
+    <button aria-label="Mese precedente" onclick="cambiaMese(-1)">‹</button>
+    <button class="titolo-mese" aria-expanded="${picker}" onclick="togglePicker()">${MESI[mese.m]} ${mese.y}<span class="freccia">${picker?'▴':'▾'}</span></button>
+    <button aria-label="Mese successivo" onclick="cambiaMese(1)">›</button>
+  </div>${apri}`;
+}
+
+function tacche(){
+  let s='';
+  for(let i=0;i<60;i++){
+    const mj=i%5===0;
+    s+=`<line class="tk${mj?' mj':''}" x1="100" y1="${mj?6:9}" x2="100" y2="14" transform="rotate(${i*6} 100 100)"/>`;
+  }
+  return s;
+}
+
+/* ---------- Schermate ---------- */
+function vistaTimbra(){
+  const a=db.attivo,ini=a?new Date(a.inizio):null;
+  return `<h1>Timbratura</h1>
+  <section class="timbra">
+    <div class="stato${a?' attivo':''}">${a?`In corso dalle ${fmtOra(ini)}`:'Non stai lavorando'}</div>
+    <button class="quadrante" aria-label="${a?'Termina il turno':'Inizia il turno'}" onclick="${a?'termina()':'inizia()'}">
+      <svg viewBox="0 0 200 200" aria-hidden="true">${tacche()}</svg>
+      <span class="centro"><span class="cont" id="cont">00:00:00</span><span class="azione">${a?'Termina':'Inizia'}</span></span>
+    </button>
+    ${a?`<label class="corr">Ho iniziato alle<input type="time" value="${fmtOra(ini)}" onchange="cambiaInizio(this.value)"></label>`:''}
+    <div class="totoggi">Oggi<strong id="oggi">0h 00m</strong></div>
+    <details class="nuovo"><summary>Segna un permesso</summary>
+      <div class="form">
+        <label>Minuti<input type="number" inputmode="numeric" min="1" id="p_min" value="15"></label>
+        <label>Motivo (facoltativo)<input type="text" id="p_nota" autocomplete="off"></label>
+        <button class="btn" onclick="aggiungiPermessoOggi()">Salva permesso</button>
+      </div>
+    </details>
+  </section>`;
+}
+
+function vistaCalendario(){
+  const y=mese.y,m=mese.m;
+  const offset=(new Date(y,m,1).getDay()+6)%7; // la settimana parte da lunedì
+  const nGiorni=new Date(y,m+1,0).getDate();
+  const ore={},tras={},perm={};
+  db.turni.forEach(x=>{const d=new Date(x.inizio);if(inMese(d)){ore[d.getDate()]=(ore[d.getDate()]||0)+durata(x);}});
+  db.trasferte.forEach(x=>{const d=new Date(x.data);if(inMese(d)){tras[d.getDate()]=true;}});
+  db.permessi.forEach(x=>{const d=new Date(x.data);if(inMese(d)){perm[d.getDate()]=(perm[d.getDate()]||0)+x.minuti;}});
+  const oggi=new Date();
+  let celle='';
+  for(let i=0;i<offset;i++) celle+='<div></div>';
+  for(let d=1;d<=nGiorni;d++){
+    const dt=new Date(y,m,d);
+    const cls=['gg'];
+    if(stessoGiorno(dt,oggi)) cls.push('adesso');
+    if(stessoGiorno(dt,giorno)) cls.push('sel');
+    if(dt.getDay()===0||dt.getDay()===6) cls.push('fest');
+    celle+=`<button class="${cls.join(' ')}" aria-label="${d} ${MESI[m]}" onclick="scegliGiorno(${d})"><span class="n">${d}</span>${(tras[d]||perm[d])?`<span class="mk">${tras[d]?'◆':''}${perm[d]?'●':''}</span>`:''}<span class="h">${ore[d]?fmtBreve(ore[d]):''}</span></button>`;
+  }
+  const msM=turniMese().reduce((s,x)=>s+durata(x),0);
+  const nTr=trasferteMese().length;
+  const minP=permessiMese().reduce((s,x)=>s+x.minuti,0);
+
+  const tg=db.turni.filter(x=>stessoGiorno(new Date(x.inizio),giorno)).sort((a,b)=>new Date(a.inizio)-new Date(b.inizio));
+  const rg=db.trasferte.filter(x=>stessoGiorno(new Date(x.data),giorno));
+  const righeT=tg.map(x=>{
+    const i=new Date(x.inizio),f=new Date(x.fine);
+    return `<div class="riga"><div><strong>${fmtOra(i)} – ${fmtOra(f)}</strong>${stessoGiorno(i,f)?'':'<small>finisce il giorno dopo</small>'}</div>
+      <div class="dx">${fmtDurMs(durata(x))}<button class="x" aria-label="Elimina" onclick="elimina('turni','${x.id}')">✕</button></div></div>`;
+  }).join('');
+  const righeR=rg.map(x=>`<div class="riga"><div><span class="oro">◆</span> ${esc(x.luogo)}<small>Trasferta</small></div>
+      <div class="dx"><button class="x" aria-label="Elimina" onclick="elimina('trasferte','${x.id}')">✕</button></div></div>`).join('');
+  const luoghi=[...new Set(db.trasferte.map(x=>x.luogo))].map(l=>`<option value="${esc(l)}">`).join('');
+
+  const rp=db.permessi.filter(x=>stessoGiorno(new Date(x.data),giorno));
+  const righeP=rp.map(x=>`<div class="riga"><div><span class="oro">●</span> Permesso${x.nota?`<small>${esc(x.nota)}</small>`:''}</div>
+      <div class="dx">${fmtMin(x.minuti)}<button class="x" aria-label="Elimina" onclick="elimina('permessi','${x.id}')">✕</button></div></div>`).join('');
+
+  return `<h1>Calendario</h1>${selMese()}
+  <p class="sotto">${fmtDurMs(msM)} lavorate, ${nTr} ${nTr===1?'trasferta':'trasferte'}${minP?`, ${fmtMin(minP)} di permessi`:''}</p>
+  <div class="sett"><span>L</span><span>M</span><span>M</span><span>G</span><span>V</span><span>S</span><span>D</span></div>
+  <div class="griglia">${celle}</div>
+  <p class="leg">◆ trasferta &nbsp;&nbsp; ● permesso</p>
+  <div class="dettaglio">
+    <h2>${GIORNI_LUNGHI[giorno.getDay()]} ${giorno.getDate()} ${MESI[giorno.getMonth()].toLowerCase()} ${giorno.getFullYear()}</h2>
+    <div class="lista">${righeT+righeR+righeP||'<div class="vuoto">Niente di registrato in questo giorno</div>'}</div>
+    <details class="nuovo"><summary>Aggiungi orario</summary>
+      <div class="form">
+        <label>Inizio<input type="time" id="c_ini" value="08:00"></label>
+        <label>Fine<input type="time" id="c_fin" value="17:00"></label>
+        <button class="btn" onclick="aggiungiTurnoGiorno()">Salva orario</button>
+      </div>
+    </details>
+    <details class="nuovo"><summary>Aggiungi trasferta</summary>
+      <div class="form">
+        <label>Luogo<input type="text" id="c_luogo" list="luoghi" autocomplete="off"></label>
+        <datalist id="luoghi">${luoghi}</datalist>
+        <button class="btn" onclick="aggiungiTrasfertaGiorno()">Salva trasferta</button>
+      </div>
+    </details>
+    <details class="nuovo"><summary>Aggiungi permesso</summary>
+      <div class="form">
+        <label>Minuti<input type="number" inputmode="numeric" min="1" id="c_pmin" value="15"></label>
+        <label>Motivo (facoltativo)<input type="text" id="c_pnota" autocomplete="off"></label>
+        <button class="btn" onclick="aggiungiPermessoGiorno()">Salva permesso</button>
+      </div>
+    </details>
+  </div>`;
+}
+
+function vistaOrari(){
+  const righe=turniMese().map(x=>{
+    const i=new Date(x.inizio),f=new Date(x.fine);
+    return `<div class="riga">
+      <div><strong>${GIORNI[i.getDay()]} ${fmtData(i)}</strong>
+      <small>${fmtOra(i)} – ${fmtOra(f)}${stessoGiorno(i,f)?'':' (giorno dopo)'}</small></div>
+      <div class="dx">${fmtDurMs(durata(x))}<button class="x" aria-label="Elimina" onclick="elimina('turni','${x.id}')">✕</button></div>
+    </div>`;
+  }).join('');
+  return `<h1>Orari</h1>${selMese()}
+  <div class="lista">${righe||'<div class="vuoto">Nessun orario in questo mese</div>'}</div>
+  <details class="nuovo"><summary>Aggiungi a mano</summary>
+    <div class="form">
+      <label>Giorno<input type="date" id="f_data" value="${inputData(new Date())}"></label>
+      <label>Inizio<input type="time" id="f_ini" value="08:00"></label>
+      <label>Fine<input type="time" id="f_fin" value="17:00"></label>
+      <button class="btn" onclick="aggiungiTurno()">Salva orario</button>
+    </div>
+  </details>`;
+}
+
+function vistaTrasferte(){
+  const righe=trasferteMese().map(x=>{
+    const d=new Date(x.data);
+    return `<div class="riga">
+      <div><strong>${esc(x.luogo)}</strong><small>${GIORNI[d.getDay()]} ${fmtData(d)}</small></div>
+      <div class="dx"><button class="x" aria-label="Elimina" onclick="elimina('trasferte','${x.id}')">✕</button></div>
+    </div>`;
+  }).join('');
+  const luoghi=[...new Set(db.trasferte.map(x=>x.luogo))].map(l=>`<option value="${esc(l)}">`).join('');
+  return `<h1>Trasferte</h1>${selMese()}
+  <div class="lista">${righe||'<div class="vuoto">Nessuna trasferta in questo mese</div>'}</div>
+  <details class="nuovo"><summary>Aggiungi trasferta</summary>
+    <div class="form">
+      <label>Giorno<input type="date" id="t_data" value="${inputData(new Date())}"></label>
+      <label>Luogo<input type="text" id="t_luogo" list="luoghi" autocomplete="off"></label>
+      <datalist id="luoghi">${luoghi}</datalist>
+      <button class="btn" onclick="aggiungiTrasferta()">Salva trasferta</button>
+    </div>
+  </details>`;
+}
+
+function datiAnno(){
+  const o=Array(12).fill(0),t=Array(12).fill(0),p=Array(12).fill(0);
+  db.turni.forEach(x=>{const d=new Date(x.inizio);if(d.getFullYear()===mese.y)o[d.getMonth()]+=durata(x);});
+  db.trasferte.forEach(x=>{const d=new Date(x.data);if(d.getFullYear()===mese.y)t[d.getMonth()]++;});
+  db.permessi.forEach(x=>{const d=new Date(x.data);if(d.getFullYear()===mese.y)p[d.getMonth()]+=x.minuti;});
+  return {o,t,p};
+}
+
+function vistaRiepilogo(){
+  const t=turniMese();
+  const ms=t.reduce((s,x)=>s+durata(x),0);
+  const giorni=new Set(t.map(x=>inputData(new Date(x.inizio)))).size;
+  const tr=trasferteMese().length;
+  const minPerm=permessiMese().reduce((s,x)=>s+x.minuti,0);
+  const {o,t:tt,p:pp}=datiAnno();
+  const righeAnno=MESI.map((n,i)=>`<button class="riga" onclick="scegliMese(${i})">
+      <span>${n}</span>
+      <span class="dx">${o[i]?fmtDurMs(o[i]):'<span style="color:var(--tenue)">–</span>'}${tt[i]?`<span class="oro">◆ ${tt[i]}</span>`:''}${pp[i]?`<span class="tenue">−${fmtMin(pp[i])}</span>`:''}</span>
+    </button>`).join('');
+  const totO=o.reduce((s,v)=>s+v,0),totT=tt.reduce((s,v)=>s+v,0),totP=pp.reduce((s,v)=>s+v,0);
+  return `<h1>Riepilogo</h1>${selMese()}
+  <div class="lista">
+    <div class="riga"><span>Ore lavorate</span><strong class="val">${fmtDurMs(ms)}</strong></div>
+    <div class="riga"><span>Giorni lavorati</span><strong class="val">${giorni}</strong></div>
+    <div class="riga"><span>Trasferte</span><strong class="val">${tr}</strong></div>
+    <div class="riga"><span>Permessi</span><strong class="val">${fmtMin(minPerm)}</strong></div>
+  </div>
+  <h2>Anno ${mese.y}</h2>
+  <div class="lista">
+    ${righeAnno}
+    <div class="riga tot"><span>Totale</span><span class="dx">${fmtDurMs(totO)}${totT?`<span class="oro">◆ ${totT}</span>`:''}${totP?`<span class="tenue">−${fmtMin(totP)}</span>`:''}</span></div>
+  </div>
+  <details class="nuovo"><summary>Backup dei dati</summary>
+    <div class="form">
+      <p class="nota">Copia questo testo e conservalo (per esempio in Note). Per ripristinare, incollalo qui sotto al posto di questo e premi Ripristina.</p>
+      <textarea id="bk" rows="5">${esc(JSON.stringify(db))}</textarea>
+
+```
+  <button class="btn sec" onclick="copiaBackup()">Copia</button>
+  <button class="btn" onclick="ripristina()">Ripristina</button>
+</div>
+```
+
+  </details>`;
+}
+
+/* ––––– Disegno ––––– */
+function render(){
+const viste={timbra:vistaTimbra,calendario:vistaCalendario,orari:vistaOrari,trasferte:vistaTrasferte,riepilogo:vistaRiepilogo};
+g(‘app’).innerHTML=viste[tab]();
+document.querySelectorAll(‘nav button’).forEach(b=>b.classList.toggle(‘on’,b.dataset.t===tab));
+aggiorna();
+}
+function aggiorna(){
+const c=g(‘cont’);
+const run=!!db.attivo;
+const trascorso=run?Date.now()-new Date(db.attivo.inizio):0;
+if(c) c.textContent=fmtCont(trascorso);
+const o=g(‘oggi’);
+if(o) o.textContent=fmtDurMs(msOggi());
+const tk=document.querySelectorAll(’.tk’);
+if(tk.length){
+const s=run?Math.floor(trascorso/1000)%60:-1;
+tk.forEach((t,i)=>t.classList.toggle(‘on’,i<=s));
+}
+}
+setInterval(aggiorna,1000);
+document.addEventListener(‘visibilitychange’,aggiorna);
+
+/* ––––– Avvio ––––– */
+(async()=>{
+await carica();
+// Per i Comandi Rapidi: ?start=1 avvia il conteggio, ?stop=1 lo ferma
+const p=new URLSearchParams(location.search);
+if(p.get(‘start’)===‘1’) inizia();
+if(p.get(‘stop’)===‘1’) termina();
+if(p.has(‘start’)||p.has(‘stop’)){
+try{history.replaceState(null,’’,location.pathname);}catch(e){}
+}
+render();
+})();
+</script>
+
+</body>
+</html>
